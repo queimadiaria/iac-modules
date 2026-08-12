@@ -1,0 +1,8 @@
+# Definição de quem é responsável pelos arquivos ou diretórios do projeto
+# Formato: caminho do arquivo ou diretório   responsável(@usuário)
+
+@queimadiaria/devops-team @queimadiaria/cibersecurity-team
+
+.github/ @queimadiaria/devops-team
+
+.github/CODEOWNERS @queimadiaria/devops-team
