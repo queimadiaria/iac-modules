@@ -1,0 +1,48 @@
+name: 'Fetch AWS Secrets Manager'
+description: 'Busca secrets no AWS Secrets Manager e injeta no ambiente das Lambdas.'
+
+inputs:
+  secret-name:
+    description: 'Nome do secret na AWS. Padrão: {repo}/{ambiente}'
+    required: false
+    default: ''
+  env-file-path:
+    description: 'Caminho do arquivo .env'
+    required: false
+    default: '.env'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Fetch Secret from AWS
+      shell: bash
+      run: |
+        set -e
+
+        ENV_NAME="${ENVIRONMENT:-${STAGE:-dev}}"
+
+        if [ -n "${{ inputs.secret-name }}" ]; then
+          SECRET_NAME="${{ inputs.secret-name }}"
+        else
+          SECRET_NAME="${GITHUB_REPOSITORY##*/}/${ENV_NAME}"
+        fi
+
+        REGION="${AWS_DEFAULT_REGION:-us-east-1}"
+
+        echo "Buscando secret: '${SECRET_NAME}' na região '${REGION}'..."
+
+        SECRET_JSON=$(aws secretsmanager get-secret-value \
+          --secret-id "${SECRET_NAME}" \
+          --region "${REGION}" \
+          --query 'SecretString' \
+          --output text 2>/dev/null || true)
+
+        if [ -z "$SECRET_JSON" ]; then
+          echo "::error::Secret '${SECRET_NAME}' não encontrado na região '${REGION}'."
+          exit 1
+        fi
+
+        echo "$SECRET_JSON" | jq -r 'to_entries | .[] | "\(.key)=\(.value)"' >> "${{ inputs.env-file-path }}"
+        echo "$SECRET_JSON" | jq -r 'to_entries | .[] | "\(.key)<<EOF\n\(.value)\nEOF"' >> $GITHUB_ENV
+
+        echo "Secrets de '${SECRET_NAME}' carregados com sucesso!"
