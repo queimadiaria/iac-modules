@@ -18,3 +18,22 @@ resource "aws_secretsmanager_secret_version" "this" {
   secret_id     = aws_secretsmanager_secret.this.id
   secret_string = jsonencode(var.custom_secrets)
 }
+
+resource "aws_iam_policy" "secrets_read" {
+  name        = "qd-${var.environment}-${var.service_name}-secrets-policy"
+  description = "Permite a leitura do Secret Global e do Secret do microsservico em runtime"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "secretsmanager:GetSecretValue"
+        Resource = [
+          "arn:aws:secretsmanager:${var.region}:*:secret:qd/${var.environment}/global-*",
+          aws_secretsmanager_secret.this.arn
+        ]
+      }
+    ]
+  })
+}
