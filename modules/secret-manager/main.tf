@@ -18,7 +18,8 @@ resource "aws_secretsmanager_secret_version" "this" {
 }
 
 resource "aws_iam_role" "shared_ecs_role" {
-  name = "qd-${var.environment}-secretsmanager-role"
+  count = var.create_shared_role ? 1 : 0
+  name  = "qd-${var.environment}-secretsmanager-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -34,8 +35,18 @@ resource "aws_iam_role" "shared_ecs_role" {
   })
 }
 
+data "aws_iam_role" "existing_shared_ecs_role" {
+  count = var.create_shared_role ? 0 : 1
+  name  = "qd-${var.environment}-secretsmanager-role"
+}
+
+locals {
+  shared_role_arn  = var.create_shared_role ? aws_iam_role.shared_ecs_role[0].arn : data.aws_iam_role.existing_shared_ecs_role[0].arn
+  shared_role_name = var.create_shared_role ? aws_iam_role.shared_ecs_role[0].name : data.aws_iam_role.existing_shared_ecs_role[0].name
+}
+
 resource "aws_iam_policy" "secrets_read" {
-  name        = "qd-${var.environment}-${var.service_name}-secrets-policy"
+  name = "qd-${var.environment}-${var.service_name}-secrets-policy"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -52,6 +63,6 @@ resource "aws_iam_policy" "secrets_read" {
 }
 
 resource "aws_iam_role_policy_attachment" "attach_secrets" {
-  role       = aws_iam_role.shared_ecs_role.name
+  role       = local.shared_role_name
   policy_arn = aws_iam_policy.secrets_read.arn
 }
