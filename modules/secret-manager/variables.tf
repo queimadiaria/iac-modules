@@ -20,3 +20,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "region" {
+  description = "Região"
+  type        = string
+  default     = "us-east-1"
+}
