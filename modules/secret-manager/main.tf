@@ -17,7 +17,6 @@ resource "aws_secretsmanager_secret_version" "this" {
   secret_string = jsonencode(var.custom_secrets)
 }
 
-
 data "aws_iam_role" "shared_ecs_role" {
-  name = "qd-${var.environment}-secretsmanager-task-role"
+  name = "QdEcsTaskService"
 }
