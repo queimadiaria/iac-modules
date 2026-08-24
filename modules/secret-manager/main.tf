@@ -1,5 +1,5 @@
 resource "aws_secretsmanager_secret" "this" {
-  name        = "qd/${var.environment}/microservice-${var.service_name}"
+  name        = "qd/${var.environment}/${var.service_name}"
   description = "${var.service_name} secret in ${var.environment} environment" 
 
   tags = merge(
