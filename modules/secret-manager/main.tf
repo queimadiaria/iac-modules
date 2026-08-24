@@ -19,5 +19,5 @@ resource "aws_secretsmanager_secret_version" "this" {
 
 
 data "aws_iam_role" "shared_ecs_role" {
-  name = "qd-${var.environment}-secretsmanager-role"
+  name = "qd-${var.environment}-secretsmanager-task-role"
 }
